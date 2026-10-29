@@ -54,7 +54,7 @@ export function resumir(movs: Movimiento[]): Resumen {
 }
 
 export function rutaDesbloqueada(resumen: Resumen): boolean {
-  return resumen.hayVenta;
+  return resumen.diasRegistrados >= DIAS_PARA_RUTA;
 }
 
 export function movimientosDelDia(movs: Movimiento[], fecha = hoyISO()): Movimiento[] {

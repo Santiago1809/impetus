@@ -43,16 +43,17 @@ export function margenDe(precioVenta: number, costoReal: number): number {
   return (precioVenta - costoReal) / precioVenta;
 }
 
-/** Redondea a los mil más cercanos, hacia arriba, como se cotiza en la calle. */
-export function redondearMil(valor: number): number {
-  return Math.ceil(valor / 1000) * 1000;
+/** Redondea hacia arriba con paso fino según el tamaño: 500, 100, 50, 10 o 1. */
+export function redondearPrecio(valor: number): number {
+  const paso = valor >= 100_000 ? 500 : valor >= 10_000 ? 100 : valor >= 1_000 ? 50 : valor >= 100 ? 10 : 1;
+  return Math.ceil(valor / paso) * paso;
 }
 
 /** Precio de un pedido al por mayor: el margen se aplica al costo de todas las unidades. */
 export function precioPedido(costoUnitario: number, cantidad: number, margen: number) {
   const n = Math.max(1, Math.floor(cantidad) || 1);
   const costoTotal = costoUnitario * n;
-  const total = redondearMil(precioParaMargen(costoTotal, margen));
+  const total = redondearPrecio(precioParaMargen(costoTotal, margen));
   return {
     cantidad: n,
     costoTotal,

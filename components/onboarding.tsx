@@ -185,7 +185,7 @@ export function Onboarding({
               ["Registra en segundos", "Venta o gasto, con tu catálogo y precios reales."],
               ["Precio real, no el de la intuición", "Insumos, transporte, empaque y tu tiempo."],
               ["Cierre del día", "Cuánto te quedó de verdad, sin fiados."],
-              ["Historial que sirve", "Hoja de vida y apoyos desde tu primera venta."],
+              ["Historial que sirve", "Hoja de vida y apoyos a partir de los 15 días registrados."],
             ].map(([titulo, texto]) => (
               <li key={titulo} className="flex gap-3">
                 <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-white/15">

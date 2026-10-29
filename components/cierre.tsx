@@ -271,7 +271,7 @@ function SiguienteNivel({ onIr }: { onIr: () => void }) {
       </p>
       <h2 className="mt-1 font-display text-[17px] font-bold leading-tight">Calcula el precio real de tus productos</h2>
       <p className="mt-1 text-[12px] leading-snug text-muted">
-        Descubrí si estás regalando tu mano de obra o si tu margen cubre tus metas.
+        Descubre si estás regalando tu mano de obra o si tu margen cubre tus metas.
       </p>
       <button
         type="button"

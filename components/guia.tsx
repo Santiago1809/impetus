@@ -192,7 +192,7 @@ function TarjetaRecurso({ recurso, pais }: { recurso: Recurso; pais: string }) {
             <p className="text-[10px] text-muted">
               {recurso.fechaVerificacion
                 ? `Fuente oficial revisada el ${recurso.fechaVerificacion} · ${pais}`
-                : `Sin verificar: confirmá costos y requisitos en la fuente oficial · ${pais}`}
+                : `Sin verificar: confirma costos y requisitos en la fuente oficial · ${pais}`}
             </p>
           </div>
         ) : null}

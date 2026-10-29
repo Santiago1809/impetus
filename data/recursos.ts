@@ -33,7 +33,7 @@ export const RECURSOS: Record<PaisId, Recurso[]> = {
       nombre: "RUT y régimen tributario",
       entidad: "DIAN",
       queEs:
-        "El RUT es el registro único tributario. Define cómo declarás y qué impuestos te corresponden según tu actividad e ingresos.",
+        "El RUT es el registro único tributario. Define cómo declaras y qué impuestos te corresponden según tu actividad e ingresos.",
       aplicaA: "Toda persona que vende o presta servicios, incluso si aún no se ha formalizado.",
       requisitos: ["Documento de identidad", "Dirección y actividad económica", "Actualizar el RUT si cambia la actividad"],
       costo: "Gratuito. Las declaraciones pueden tener sanciones si se presentan tarde.",
@@ -101,7 +101,7 @@ export const RECURSOS: Record<PaisId, Recurso[]> = {
       nombre: "Seguridad social del trabajador independiente",
       entidad: "PILA / UGPP",
       queEs:
-        "Como independiente también aportás a salud y pensión. Estar al día te protege y fortalece tu historial.",
+        "Como independiente también aportas a salud y pensión. Estar al día te protege y fortalece tu historial.",
       aplicaA: "Personas que trabajan por cuenta propia y reciben ingresos por su actividad.",
       requisitos: ["Afiliación a EPS y fondo de pensión", "Reportar los aportes por PILA", "Ingresos declarados según tu actividad"],
       costo: "Porcentaje sobre el ingreso base de cotización.",
@@ -184,7 +184,7 @@ export const RECURSOS: Record<PaisId, Recurso[]> = {
       nombre: "Régimen simplificado para pequeños contribuyentes",
       entidad: "SAR",
       queEs:
-        "Un esquema con trámites y declaraciones más simples para negocios de menor tamaño. El SAR define si calificás.",
+        "Un esquema con trámites y declaraciones más simples para negocios de menor tamaño. El SAR define si calificas.",
       aplicaA: "Pequeños negocios con ingresos bajos que quieren cumplir sin una carga contable grande.",
       requisitos: ["RTN", "Estar dentro de los límites del régimen", "Presentar las declaraciones del esquema"],
       costo: "Depende del régimen y de los ingresos declarados.",
@@ -286,7 +286,7 @@ export const RECURSOS: Record<PaisId, Recurso[]> = {
         "La factura electrónica (CFDI) respalda tus ventas y es obligatoria para contribuyentes del régimen formal.",
       aplicaA: "Negocios dados de alta en el SAT que venden a otras personas o empresas.",
       requisitos: ["RFC y contraseña del SAT", "Certificado de sello digital", "Software o proveedor autorizado"],
-      costo: "La facturación puede tener costo si usás un proveedor; el SAT no cobra por el timbrado.",
+      costo: "La facturación puede tener costo si usas un proveedor; el SAT no cobra por el timbrado.",
       enlace: "https://www.sat.gob.mx",
       formalidades: ["proceso", "registrada"],
       metas: ["formalizar", "crecer"],

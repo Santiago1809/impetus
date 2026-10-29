@@ -5,7 +5,7 @@ import { DriveTutorial } from "@/lib/drive";
 import { dbApi, type Negocio, type Producto } from "@/lib/db";
 import { dinero } from "@/lib/format";
 import { PAISES } from "@/lib/paises";
-import { desglosar, margenDe, precioParaMargen, precioPedido, redondearMil } from "@/lib/precio";
+import { desglosar, margenDe, precioPedido } from "@/lib/precio";
 import { Boton, Campo, EntradaNumero, EntradaTexto, IcoBasura, IcoCheck, IcoCompartir, IcoInfo, IcoMas, Segmentado } from "./ui";
 
 const MARGENES = [

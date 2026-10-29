@@ -35,7 +35,8 @@ export function Ruta({
   const abierta = rutaDesbloqueada(resumen);
   const apoyos = apoyosPara(pais, negocio);
   const constancia = Math.round(resumen.constancia * 100);
-  const progreso = Math.min(resumen.diasUltimos30 / DIAS_PARA_RUTA, 1);
+  const progreso = Math.min(resumen.diasRegistrados / DIAS_PARA_RUTA, 1);
+  const faltan = Math.max(DIAS_PARA_RUTA - resumen.diasRegistrados, 0);
 
   const mensajeHoja = `Hoja de vida de mi negocio · Impetus
 Negocio: ${negocio.tipoNegocio}
@@ -57,14 +58,27 @@ Hoja autodeclarada. No es un score crediticio.`;
 
         <div id="ds-ruta-nivel" className="rounded-[1.5rem] bg-verde p-5 text-white">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em]">
-            <IcoCandado className="size-3.5" /> Empieza con tu primera venta
+            <IcoCandado className="size-3.5" /> {faltan} {faltan === 1 ? "día" : "días"} para desbloquear
           </span>
           <h2 className="mt-3 font-display text-[24px] font-bold leading-tight">
-            Tu hoja de vida nace en la primera venta
+            Tu historial se abre a los {DIAS_PARA_RUTA} días
           </h2>
           <p className="mt-1 text-[13px] leading-snug text-white/85">
-            Registra una sola venta y se activa al instante. Después crece cada día que anotes algo.
+            Anota al menos un movimiento cada día. Con {DIAS_PARA_RUTA} días registrados se activa tu hoja de
+            vida, los apoyos y el resumen para compartir.
           </p>
+
+          <div className="mt-4">
+            <div className="flex items-baseline justify-between text-[11px] font-semibold text-white/85">
+              <span>
+                {resumen.diasRegistrados} de {DIAS_PARA_RUTA} días
+              </span>
+              <span>{Math.round(progreso * 100)}%</span>
+            </div>
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/20">
+              <div className="h-full rounded-full bg-menta transition-all" style={{ width: `${progreso * 100}%` }} />
+            </div>
+          </div>
         </div>
 
         <div className="card space-y-3 p-4">
@@ -151,7 +165,7 @@ Hoja autodeclarada. No es un score crediticio.`;
               <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-verde-soft text-xl">🏪</span>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-verde">
-                  Autodeclarado · verificable
+                  Autodeclarado
                 </p>
                 <h2 className="font-display text-[19px] font-bold leading-tight">{negocio.tipoNegocio}</h2>
                 <p className="text-[12px] text-muted">

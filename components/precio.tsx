@@ -14,6 +14,13 @@ const MARGENES = [
   { valor: 0.5, etiqueta: "50%", sub: "Crecimiento" },
 ];
 
+// Al por mayor el margen se mide distinto: se gana por volumen, no por pieza.
+const MARGENES_MAYOR = [
+  { valor: 0.1, etiqueta: "10%", sub: "Volumen" },
+  { valor: 0.2, etiqueta: "20%", sub: "Mayorista" },
+  { valor: 0.3, etiqueta: "30%", sub: "Buen margen" },
+];
+
 export function PrecioReal({
   negocio,
   productos,
@@ -36,15 +43,32 @@ export function PrecioReal({
   const [margen, setMargen] = useState(0.35);
   const [venta, setVenta] = useState<"unidad" | "mayor">("unidad");
   const [unidades, setUnidades] = useState(10);
+  // En al por mayor la gente escribe el costo de los insumos del pedido completo.
+  const [baseCostos, setBaseCostos] = useState<"unidad" | "pedido">("unidad");
+  // Y también el tiempo total de la tanda, no el de cada pieza.
+  const [baseTiempo, setBaseTiempo] = useState<"unidad" | "pedido">("unidad");
   const [flash, setFlash] = useState("");
   const [guardando, setGuardando] = useState(false);
 
+  const porMayor = venta === "mayor";
+  const unidadesNum = Math.max(1, Math.floor(unidades) || 1);
+  const costoPorPedido = porMayor && baseCostos === "pedido";
+  const tiempoPorPedido = porMayor && baseTiempo === "pedido";
+  const divisor = costoPorPedido ? unidadesNum : 1;
+  const minutosUnidad = tiempoPorPedido ? minutos / unidadesNum : minutos;
+
   const d = useMemo(
-    () => desglosar({ costoProducto, costoTransporte, costoEmpaque, minutos, valorHora }),
-    [costoProducto, costoTransporte, costoEmpaque, minutos, valorHora],
+    () =>
+      desglosar({
+        costoProducto: costoProducto / divisor,
+        costoTransporte: costoTransporte / divisor,
+        costoEmpaque: costoEmpaque / divisor,
+        minutos: minutosUnidad,
+        valorHora,
+      }),
+    [costoProducto, costoTransporte, costoEmpaque, minutosUnidad, valorHora, divisor],
   );
 
-  const porMayor = venta === "mayor";
   const pedido = precioPedido(d.costoReal, porMayor ? unidades : 1, margen);
   const { cantidad, costoTotal, total: sugerido, porUnidad: sugeridoUnidad, ganancia } = pedido;
   const margenActual = margenDe(precioVenta, d.costoReal);
@@ -180,11 +204,32 @@ Calculado con Impetus.`;
       </div>
 
       <section className="card p-4" id="ds-precio-costos">
-        <h2 className="mb-3 text-[14px] font-bold">Desglose del costo unitario</h2>
+        <h2 className="mb-1 text-[14px] font-bold">
+          {costoPorPedido ? "Costo de los insumos del pedido" : "Desglose del costo unitario"}
+        </h2>
+        {porMayor ? (
+          <div className="mb-3">
+            <p className="mb-1 text-[11px] font-semibold text-muted">¿Ese costo es de todo el pedido o de una unidad?</p>
+            <Segmentado
+              valor={baseCostos}
+              onCambio={setBaseCostos}
+              opciones={[
+                { valor: "pedido", etiqueta: `Del pedido (${divisor} u.)` },
+                { valor: "unidad", etiqueta: "Por unidad" },
+              ]}
+            />
+          </div>
+        ) : (
+          <div className="mb-3" />
+        )}
         <div className="space-y-3">
           <Fila
             etiqueta="Ingredientes o insumos"
-            ayuda="Lo que gastas en materiales para UNA unidad: masa, queso, huevo…"
+            ayuda={
+              costoPorPedido
+                ? `Lo que gastaste en insumos para las ${divisor} unidades.`
+                : "Lo que gastas en materiales para UNA unidad: masa, queso, huevo…"
+            }
             emoji="🧾"
             valor={costoProducto}
             onCambio={setCostoProducto}
@@ -192,7 +237,11 @@ Calculado con Impetus.`;
           />
           <Fila
             etiqueta="Transporte y fletes"
-            ayuda="Lo que pagas por traer la mercancía o por una entrega, repartido por unidad."
+            ayuda={
+              costoPorPedido
+                ? "Lo que pagaste por traer todo el pedido."
+                : "Lo que pagas por traer la mercancía o por una entrega."
+            }
             emoji="🛵"
             valor={costoTransporte}
             onCambio={setCostoTransporte}
@@ -200,7 +249,11 @@ Calculado con Impetus.`;
           />
           <Fila
             etiqueta="Empaque y desechables"
-            ayuda="Bolsa, vaso, caja o servilleta que entregas con cada venta."
+            ayuda={
+              costoPorPedido
+                ? `Bolsas o cajas de las ${divisor} unidades.`
+                : "Bolsa, vaso, caja o servilleta que entregas con cada venta."
+            }
             emoji="🛍️"
             valor={costoEmpaque}
             onCambio={setCostoEmpaque}
@@ -212,8 +265,28 @@ Calculado con Impetus.`;
               <p className="flex-1 text-[13px] font-bold">Tu mano de obra propia</p>
               <p className="num text-[14px] font-extrabold text-verde">{dinero(d.manoObra, pais)}</p>
             </div>
+            {porMayor ? (
+              <div className="mt-2">
+                <p className="mb-1 text-[11px] font-semibold text-muted">¿Esos minutos son de una unidad o de todo el pedido?</p>
+                <Segmentado
+                  valor={baseTiempo}
+                  onCambio={setBaseTiempo}
+                  opciones={[
+                    { valor: "pedido", etiqueta: `Del pedido (${unidadesNum} u.)` },
+                    { valor: "unidad", etiqueta: "Por unidad" },
+                  ]}
+                />
+              </div>
+            ) : null}
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <Campo label="Minutos por unidad" hint="Cuánto tardas en preparar UNA unidad.">
+              <Campo
+                label={tiempoPorPedido ? "Minutos del pedido" : "Minutos por unidad"}
+                hint={
+                  tiempoPorPedido
+                    ? `Tiempo total de las ${unidadesNum} unidades. Son ${Math.round(minutosUnidad * 10) / 10} min por unidad.`
+                    : "Cuánto tardas en preparar UNA unidad."
+                }
+              >
                 <EntradaNumero valor={minutos} onCambio={setMinutos} sufijo="min" className="h-11 bg-card" />
               </Campo>
               <Campo label="Valor de tu hora" hint="Cuánto quieres ganar por hora de trabajo.">
@@ -232,7 +305,11 @@ Calculado con Impetus.`;
           ) : null}
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <Metrica titulo="Solo insumos" valor={dinero(costoProducto, pais)} sub="Lo que anotabas" />
+          <Metrica
+            titulo="Solo insumos"
+            valor={dinero(d.costoProducto, pais)}
+            sub={costoPorPedido ? "Por unidad" : "Lo que anotabas"}
+          />
           <Metrica titulo="Costo real" valor={dinero(d.costoReal, pais)} sub="Con todo incluido" destacado />
           <Metrica titulo="Tu precio" valor={precioVenta ? dinero(precioVenta, pais) : "—"} sub={precioVenta ? "En mostrador" : "Sin definir"} />
         </div>
@@ -274,7 +351,12 @@ Calculado con Impetus.`;
         <div className="mt-2">
           <Segmentado
             valor={venta}
-            onCambio={setVenta}
+            onCambio={(v) => {
+              setVenta(v);
+              setBaseCostos(v === "mayor" ? "pedido" : "unidad");
+              setBaseTiempo(v === "mayor" ? "pedido" : "unidad");
+              setMargen(v === "mayor" ? 0.2 : 0.35);
+            }}
             opciones={[
               { valor: "unidad", etiqueta: "Por unidad" },
               { valor: "mayor", etiqueta: "Al por mayor" },
@@ -289,7 +371,7 @@ Calculado con Impetus.`;
           </div>
         ) : null}
         <div className="mt-2 grid grid-cols-3 gap-2">
-          {MARGENES.map((m) => (
+          {(porMayor ? MARGENES_MAYOR : MARGENES).map((m) => (
             <button
               key={m.valor}
               type="button"
@@ -312,8 +394,14 @@ Calculado con Impetus.`;
           <p className="num mt-1 text-[34px] font-extrabold leading-none">{dinero(sugeridoUnidad, pais)}</p>
           <p className="mt-1 text-[12px] text-white/85">
             {porMayor
-              ? `${cantidad} unidades · total ${dinero(sugerido, pais)} · costo ${dinero(costoTotal, pais)}`
+              ? `${cantidad} unidades · total ${dinero(sugerido, pais)}`
               : `Tu costo real es ${dinero(d.costoReal, pais)}`}
+          </p>
+          <p className="mt-1 text-[11px] leading-snug text-white/70">
+            Costo por unidad {dinero(d.costoReal, pais)}: insumos {dinero(d.costoProducto, pais)}
+            {d.costoTransporte > 0 ? ` + transporte ${dinero(d.costoTransporte, pais)}` : ""}
+            {d.costoEmpaque > 0 ? ` + empaque ${dinero(d.costoEmpaque, pais)}` : ""} + tu tiempo{" "}
+            {dinero(d.manoObra, pais)}
           </p>
           <p className="mt-3 border-t border-white/15 pt-2 text-[12px] text-white/85">
             Ganancia real libre por unidad: <b className="text-white">{dinero(ganancia / cantidad, pais)}</b>

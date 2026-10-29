@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 import { dbApi, type Movimiento, type Negocio, type Producto, type TipoMovimiento } from "@/lib/db";
 import { dinero, fechaLarga, hoyISO, numero } from "@/lib/format";
 import { movimientosDelDia, totales } from "@/lib/hoja-vida";
 import { PAISES, simboloMoneda } from "@/lib/paises";
-import { dictar, hayVoz, montoDeVoz } from "@/lib/voz";
 import { DriveTutorial } from "@/lib/drive";
-import { IcoBorrar, IcoCheck, IcoFlecha, IcoMas, IcoMenos, IcoMicro } from "./ui";
+import { IcoBorrar, IcoCheck, IcoFlecha, IcoMas, IcoMenos } from "./ui";
 
 const GASTOS = [
   "Insumos / materiales",
@@ -39,13 +38,6 @@ export function Registro({
   const [nota, setNota] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [flash, setFlash] = useState("");
-  const [escuchando, setEscuchando] = useState(false);
-
-  const hayMicrofono = useSyncExternalStore(
-    () => () => {},
-    hayVoz,
-    () => false,
-  );
 
   const hoy = hoyISO();
   const delDia = useMemo(() => {
@@ -92,27 +84,6 @@ export function Registro({
     setGuardando(false);
     setFlash(tipo === "venta" ? "Venta guardada" : "Gasto guardado");
     window.setTimeout(() => setFlash(""), 2200);
-  }
-
-  function escuchar() {
-    if (escuchando) return;
-    setEscuchando(true);
-    const parar = dictar(
-      p.locale,
-      (texto) => {
-        const n = montoDeVoz(texto);
-        if (n > 0) {
-          setMonto(n);
-          setFlash(`Escuché: ${dinero(n, pais)}`);
-        } else {
-          setProducto(texto.trim().slice(0, 40));
-          setFlash(`Escuché: "${texto.trim()}"`);
-        }
-        window.setTimeout(() => setFlash(""), 3000);
-      },
-      () => setEscuchando(false),
-    );
-    if (!parar) setEscuchando(false);
   }
 
   async function eliminar(id?: number) {
@@ -321,26 +292,6 @@ export function Registro({
           </button>
         </div>
       </div>
-
-      {hayMicrofono ? (
-        <button
-          type="button"
-          onClick={escuchar}
-          className={`flex w-full items-center gap-3 rounded-2xl bg-lavanda px-4 py-3 text-left transition-colors active:scale-[0.99] ${
-            escuchando ? "bg-verde-soft" : ""
-          }`}
-        >
-          <span className={`grid size-10 shrink-0 place-items-center rounded-full bg-verde text-white ${escuchando ? "animate-pulse" : ""}`}>
-            <IcoMicro />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-bold">{escuchando ? "Escuchando…" : "Dictar por voz"}</span>
-            <span className="block truncate text-[11px] text-muted">
-              {escuchando ? "Di el monto o el producto" : 'Ej. "Venta de 18 mil"'}
-            </span>
-          </span>
-        </button>
-      ) : null}
 
       <details className="card px-4 py-3">
         <summary className="cursor-pointer text-[12px] font-semibold text-muted">Detalles opcionales</summary>

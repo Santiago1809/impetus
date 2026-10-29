@@ -5,8 +5,8 @@ import { DriveTutorial } from "@/lib/drive";
 import { dbApi, type Negocio, type Producto } from "@/lib/db";
 import { dinero } from "@/lib/format";
 import { PAISES } from "@/lib/paises";
-import { desglosar, margenDe, precioParaMargen, redondearMil } from "@/lib/precio";
-import { Boton, EntradaNumero, EntradaTexto, IcoBasura, IcoCheck, IcoCompartir, IcoInfo, IcoMas } from "./ui";
+import { desglosar, margenDe, precioParaMargen, precioPedido, redondearMil } from "@/lib/precio";
+import { Boton, Campo, EntradaNumero, EntradaTexto, IcoBasura, IcoCheck, IcoCompartir, IcoInfo, IcoMas, Segmentado } from "./ui";
 
 const MARGENES = [
   { valor: 0.3, etiqueta: "30%", sub: "Básico" },
@@ -34,6 +34,8 @@ export function PrecioReal({
   const [valorHora, setValorHora] = useState(p.valorHora);
   const [precioVenta, setPrecioVenta] = useState(0);
   const [margen, setMargen] = useState(0.35);
+  const [venta, setVenta] = useState<"unidad" | "mayor">("unidad");
+  const [unidades, setUnidades] = useState(10);
   const [flash, setFlash] = useState("");
   const [guardando, setGuardando] = useState(false);
 
@@ -42,15 +44,16 @@ export function PrecioReal({
     [costoProducto, costoTransporte, costoEmpaque, minutos, valorHora],
   );
 
-  const sugerido = redondearMil(precioParaMargen(d.costoReal, margen));
-  const ganancia = sugerido - d.costoReal;
+  const porMayor = venta === "mayor";
+  const pedido = precioPedido(d.costoReal, porMayor ? unidades : 1, margen);
+  const { cantidad, costoTotal, total: sugerido, porUnidad: sugeridoUnidad, ganancia } = pedido;
   const margenActual = margenDe(precioVenta, d.costoReal);
   const perdida = precioVenta > 0 ? precioVenta - d.costoReal : 0;
 
   const mensaje = `Análisis de precio · ${nombre || "mi producto"}
-Costo real completo: ${dinero(d.costoReal, pais)}
-Precio sugerido: ${dinero(sugerido, pais)}
-Ganancia real por unidad: ${dinero(ganancia, pais)}
+Costo real completo por unidad: ${dinero(d.costoReal, pais)}
+Precio sugerido por unidad: ${dinero(sugeridoUnidad, pais)}
+${porMayor ? `Pedido de ${cantidad} unidades · precio total: ${dinero(sugerido, pais)}\n` : ""}Ganancia real por unidad: ${dinero(ganancia / cantidad, pais)}
 
 Calculado con Impetus.`;
 
@@ -89,10 +92,10 @@ Calculado con Impetus.`;
         costoEmpaque,
         minutos,
         valorHora,
-        precioVenta: precioVenta || sugerido,
+        precioVenta: precioVenta || sugeridoUnidad,
       });
       await recargar();
-      setPrecioVenta(precioVenta || sugerido);
+      setPrecioVenta(precioVenta || sugeridoUnidad);
       setFlash(productoId ? "Precio actualizado" : "Producto guardado");
       window.setTimeout(() => setFlash(""), 2400);
     } finally {
@@ -158,14 +161,18 @@ Calculado con Impetus.`;
       ) : null}
 
       <div className="card p-4" id="ds-precio-producto">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted">Producto en evaluación</p>
-        <EntradaTexto
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          placeholder="Ej. Arepa de chócolo especial"
-          maxLength={40}
-          className="mt-1.5 font-bold"
-        />
+        <Campo
+          label="Nombre del producto"
+          hint="Escríbelo como lo conocen tus clientes. Ej. «Arepa de chócolo especial»."
+        >
+          <EntradaTexto
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Ej. Arepa de chócolo especial"
+            maxLength={40}
+            className="font-bold"
+          />
+        </Campo>
         <div className="mt-3 flex items-center gap-2 text-[11px] text-muted">
           <span className="rounded-full bg-lavanda px-2 py-1 font-bold">Paso 1 de 3</span>
           Completa el desglose real de una unidad
@@ -175,9 +182,30 @@ Calculado con Impetus.`;
       <section className="card p-4" id="ds-precio-costos">
         <h2 className="mb-3 text-[14px] font-bold">Desglose del costo unitario</h2>
         <div className="space-y-3">
-          <Fila etiqueta="Ingredientes o insumos" emoji="🧾" valor={costoProducto} onCambio={setCostoProducto} pais={pais} />
-          <Fila etiqueta="Transporte y fletes" emoji="🛵" valor={costoTransporte} onCambio={setCostoTransporte} pais={pais} />
-          <Fila etiqueta="Empaque y desechables" emoji="🛍️" valor={costoEmpaque} onCambio={setCostoEmpaque} pais={pais} />
+          <Fila
+            etiqueta="Ingredientes o insumos"
+            ayuda="Lo que gastas en materiales para UNA unidad: masa, queso, huevo…"
+            emoji="🧾"
+            valor={costoProducto}
+            onCambio={setCostoProducto}
+            pais={pais}
+          />
+          <Fila
+            etiqueta="Transporte y fletes"
+            ayuda="Lo que pagas por traer la mercancía o por una entrega, repartido por unidad."
+            emoji="🛵"
+            valor={costoTransporte}
+            onCambio={setCostoTransporte}
+            pais={pais}
+          />
+          <Fila
+            etiqueta="Empaque y desechables"
+            ayuda="Bolsa, vaso, caja o servilleta que entregas con cada venta."
+            emoji="🛍️"
+            valor={costoEmpaque}
+            onCambio={setCostoEmpaque}
+            pais={pais}
+          />
           <div className="rounded-xl bg-verde-soft/60 p-3">
             <div className="flex items-center gap-2">
               <span className="grid size-8 place-items-center rounded-lg bg-card text-[15px]">⏱️</span>
@@ -185,14 +213,12 @@ Calculado con Impetus.`;
               <p className="num text-[14px] font-extrabold text-verde">{dinero(d.manoObra, pais)}</p>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <label className="text-[10px] font-semibold text-muted">
-                Minutos por unidad
-                <EntradaNumero valor={minutos} onCambio={setMinutos} sufijo="min" className="mt-1 h-11 bg-card" />
-              </label>
-              <label className="text-[10px] font-semibold text-muted">
-                Valor de tu hora
-                <EntradaNumero valor={valorHora} onCambio={setValorHora} sufijo={p.moneda} className="mt-1 h-11 bg-card" />
-              </label>
+              <Campo label="Minutos por unidad" hint="Cuánto tardas en preparar UNA unidad.">
+                <EntradaNumero valor={minutos} onCambio={setMinutos} sufijo="min" className="h-11 bg-card" />
+              </Campo>
+              <Campo label="Valor de tu hora" hint="Cuánto quieres ganar por hora de trabajo.">
+                <EntradaNumero valor={valorHora} onCambio={setValorHora} sufijo={p.moneda} className="h-11 bg-card" />
+              </Campo>
             </div>
           </div>
         </div>
@@ -245,6 +271,23 @@ Calculado con Impetus.`;
       <aside className="space-y-4 lg:sticky lg:top-24">
       <section className="card p-4" id="ds-precio-margen">
         <h2 className="text-[14px] font-bold">Margen de ganancia limpia</h2>
+        <div className="mt-2">
+          <Segmentado
+            valor={venta}
+            onCambio={setVenta}
+            opciones={[
+              { valor: "unidad", etiqueta: "Por unidad" },
+              { valor: "mayor", etiqueta: "Al por mayor" },
+            ]}
+          />
+        </div>
+        {porMayor ? (
+          <div className="mt-2">
+            <Campo label="¿Cuántas unidades en el pedido?" hint="Calculamos el precio del pedido completo.">
+              <EntradaNumero valor={unidades} onCambio={setUnidades} sufijo="u" className="h-11" />
+            </Campo>
+          </div>
+        ) : null}
         <div className="mt-2 grid grid-cols-3 gap-2">
           {MARGENES.map((m) => (
             <button
@@ -263,18 +306,28 @@ Calculado con Impetus.`;
 
         <div className="mt-3 rounded-2xl bg-verde px-4 py-4 text-white">
           <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.12em] text-menta">
-            <span>Precio sugerido y justo</span>
+            <span>{porMayor ? `Por unidad · pedido de ${cantidad}` : "Precio sugerido y justo"}</span>
             <span>{p.moneda}</span>
           </div>
-          <p className="num mt-1 text-[34px] font-extrabold leading-none">{dinero(sugerido, pais)}</p>
+          <p className="num mt-1 text-[34px] font-extrabold leading-none">{dinero(sugeridoUnidad, pais)}</p>
+          <p className="mt-1 text-[12px] text-white/85">
+            {porMayor
+              ? `${cantidad} unidades · total ${dinero(sugerido, pais)} · costo ${dinero(costoTotal, pais)}`
+              : `Tu costo real es ${dinero(d.costoReal, pais)}`}
+          </p>
           <p className="mt-3 border-t border-white/15 pt-2 text-[12px] text-white/85">
-            Ganancia real libre para ti: <b className="text-white">{dinero(ganancia, pais)}</b>
+            Ganancia real libre por unidad: <b className="text-white">{dinero(ganancia / cantidad, pais)}</b>
+            {porMayor ? <> · en el pedido <b className="text-white">{dinero(ganancia, pais)}</b></> : null}
           </p>
         </div>
 
         <div className="mt-3">
-          <p className="mb-1 text-[11px] font-semibold text-muted">¿Ya lo vendes a otro precio? Escríbelo aquí</p>
-          <EntradaNumero valor={precioVenta} onCambio={setPrecioVenta} sufijo={p.moneda} />
+          <Campo
+            label="Tu precio de venta actual"
+            hint="Si lo dejas en 0, guardamos el precio sugerido."
+          >
+            <EntradaNumero valor={precioVenta} onCambio={setPrecioVenta} sufijo={p.moneda} />
+          </Campo>
         </div>
 
         {flash ? <p className="pop mt-2 text-[12px] font-bold text-verde">{flash}</p> : null}
@@ -343,22 +396,27 @@ Calculado con Impetus.`;
 
 function Fila({
   etiqueta,
+  ayuda,
   emoji,
   valor,
   onCambio,
   pais,
 }: {
   etiqueta: string;
+  ayuda: string;
   emoji: string;
   valor: number;
   onCambio: (n: number) => void;
   pais: Negocio["pais"];
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lavanda text-[15px]">{emoji}</span>
-      <p className="flex-1 text-[13px] font-semibold">{etiqueta}</p>
-      <div className="w-32">
+    <div className="flex items-start gap-2">
+      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-lavanda text-[15px]">{emoji}</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold">{etiqueta}</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-muted">{ayuda}</p>
+      </div>
+      <div className="w-28 shrink-0">
         <EntradaNumero valor={valor} onCambio={onCambio} sufijo={PAISES[pais].moneda} className="h-11 text-right" />
       </div>
     </div>

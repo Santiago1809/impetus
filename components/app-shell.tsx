@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { dbApi, type Cierre, type Movimiento, type Negocio, type Producto } from "@/lib/db";
+import { dbApi, salir, sesionActual, type Cierre, type Movimiento, type Negocio, type Producto, type Sesion } from "@/lib/db";
 import { cargarEjemplo } from "@/lib/demo";
 import { hoyISO } from "@/lib/format";
 import { resumir } from "@/lib/hoja-vida";
@@ -9,6 +9,7 @@ import { PAISES } from "@/lib/paises";
 import { Ajustes } from "./ajustes";
 import { CierreDia } from "./cierre";
 import { Guia } from "./guia";
+import { Login } from "./login";
 import { Onboarding } from "./onboarding";
 import { PrecioReal } from "./precio";
 import { Registro } from "./registro";
@@ -27,6 +28,7 @@ const TABS = [
 
 export function AppShell() {
   const [cargando, setCargando] = useState(true);
+  const [sesion, setSesion] = useState<Sesion | null | undefined>(undefined);
   const [negocio, setNegocio] = useState<Negocio | null>(null);
   const [movs, setMovs] = useState<Movimiento[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -45,6 +47,25 @@ export function AppShell() {
 
   useEffect(() => {
     let vivo = true;
+    sesionActual()
+      .then((s) => {
+        if (vivo) setSesion(s);
+      })
+      .catch(() => {
+        if (vivo) setSesion(null);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sesion) {
+      setCargando(false);
+      return;
+    }
+    let vivo = true;
+    setCargando(true);
     (async () => {
       const n = await dbApi.getNegocio();
       if (!vivo) return;
@@ -55,7 +76,7 @@ export function AppShell() {
     return () => {
       vivo = false;
     };
-  }, [recargar]);
+  }, [sesion, recargar]);
 
   useEffect(() => {
     const sync = () => setOnline(navigator.onLine);
@@ -110,7 +131,18 @@ export function AppShell() {
     setTab("registro");
   }
 
-  if (cargando) {
+  async function cerrarSesionApp() {
+    await salir();
+    setSesion(null);
+    setNegocio(null);
+    setMovs([]);
+    setProductos([]);
+    setCierres([]);
+    setAjustes(false);
+    setTab("registro");
+  }
+
+  if (cargando || sesion === undefined) {
     return (
       <div className="grid min-h-dvh place-items-center">
         <div className="flex flex-col items-center gap-3">
@@ -121,6 +153,10 @@ export function AppShell() {
         </div>
       </div>
     );
+  }
+
+  if (!sesion) {
+    return <Login onEntrar={(s) => setSesion(s)} />;
   }
 
   if (!negocio || editando) {
@@ -279,6 +315,7 @@ export function AppShell() {
         abierto={ajustes}
         onCerrar={() => setAjustes(false)}
         negocio={negocio}
+        cuenta={sesion.email}
         movimientos={movs.length}
         onEditar={() => {
           setAjustes(false);
@@ -287,6 +324,7 @@ export function AppShell() {
         onEjemplo={cargarDemo}
         onExportar={exportar}
         onBorrarTodo={borrarDatos}
+        onSalir={cerrarSesionApp}
       />
     </div>
   );

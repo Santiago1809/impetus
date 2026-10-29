@@ -72,13 +72,6 @@ export const IcoAjustes = ({ className }: IconProps) => (
   </Svg>
 );
 
-export const IcoMicro = ({ className }: IconProps) => (
-  <Svg className={className}>
-    <rect x="9" y="2" width="6" height="12" rx="3" />
-    <path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
-  </Svg>
-);
-
 export const IcoBasura = ({ className }: IconProps) => (
   <Svg className={className}>
     <path d="M4 7h16M9 7V5h6v2M6 7l1 14h10l1-14M10 11v6M14 11v6" />

@@ -41,6 +41,11 @@ export function DriveTutorial({
       animate: true,
       allowClose: true,
       skipMissingElement: true,
+      nextBtnText: "Siguiente",
+      prevBtnText: "Atrás",
+      doneBtnText: "Listo",
+      progressText: "{{current}} de {{total}}",
+      closeBtnLabel: "Cerrar tutorial",
       popoverClass: "bg-card border border-line rounded-2xl shadow-xl px-4 py-3",
     });
     drv.setSteps(steps);

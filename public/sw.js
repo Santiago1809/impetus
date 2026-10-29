@@ -1,5 +1,5 @@
 /* Impetus offline shell. Registered only in production builds. */
-const CACHE = "impetus-v1";
+const CACHE = "impetus-v2";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {

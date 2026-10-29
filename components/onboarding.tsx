@@ -139,7 +139,7 @@ export function Onboarding({
     setGuardandoNegocio(true);
     try {
       await onGuardar({
-        id: 1,
+        id: inicial?.id ?? 0,
         tipoNegocio: nombreNegocio.trim() || tipo || "Mi negocio",
         antiguedadMeses: antiguedad,
         meta,

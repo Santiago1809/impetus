@@ -47,3 +47,17 @@ export function margenDe(precioVenta: number, costoReal: number): number {
 export function redondearMil(valor: number): number {
   return Math.ceil(valor / 1000) * 1000;
 }
+
+/** Precio de un pedido al por mayor: el margen se aplica al costo de todas las unidades. */
+export function precioPedido(costoUnitario: number, cantidad: number, margen: number) {
+  const n = Math.max(1, Math.floor(cantidad) || 1);
+  const costoTotal = costoUnitario * n;
+  const total = redondearMil(precioParaMargen(costoTotal, margen));
+  return {
+    cantidad: n,
+    costoTotal,
+    total,
+    porUnidad: Math.ceil(total / n),
+    ganancia: total - costoTotal,
+  };
+}

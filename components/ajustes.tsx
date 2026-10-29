@@ -10,20 +10,24 @@ export function Ajustes({
   abierto,
   onCerrar,
   negocio,
+  cuenta,
   movimientos,
   onEditar,
   onEjemplo,
   onExportar,
   onBorrarTodo,
+  onSalir,
 }: {
   abierto: boolean;
   onCerrar: () => void;
   negocio: Negocio;
+  cuenta: string;
   movimientos: number;
   onEditar: () => void;
   onEjemplo: () => Promise<void>;
   onExportar: () => void;
   onBorrarTodo: () => Promise<void>;
+  onSalir: () => Promise<void>;
 }) {
   const [confirmar, setConfirmar] = useState(false);
   const [cargandoEjemplo, setCargandoEjemplo] = useState(false);
@@ -78,9 +82,17 @@ export function Ajustes({
             <IcoInfo className="size-4" />
           </span>
           <p className="text-[11px] leading-relaxed text-ink">
-            <b>100% en tu celular.</b> Impetus no envía tus datos a ningún servidor. Si borras la app o los
-            datos del navegador, se pierden: exporta un respaldo si te sirve.
+            <b>Tu cuenta es privada.</b> Entraste como <b>{cuenta}</b>. Solo con ese correo y contraseña se
+            ven tu perfil, tus movimientos y tus precios.
           </p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="eyebrow">Cuenta</p>
+          <p className="truncate rounded-xl bg-paper px-3 py-2.5 text-[12px] font-semibold text-muted">{cuenta}</p>
+          <Boton bloque variante="secondary" onClick={onSalir}>
+            Cerrar sesión
+          </Boton>
         </div>
 
         <div className="rounded-2xl border border-terra/25 p-4">

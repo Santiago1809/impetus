@@ -1,12 +1,9 @@
-import { createClient } from "@libsql/client/web";
+import { createClient } from "@libsql/client";
 
-const url = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_TURSO_URL
-  ? process.env.NEXT_PUBLIC_TURSO_URL
-  : (typeof window !== "undefined" && (window as any).ENV?.TURSO_URL) || "";
-
-const authToken = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_TURSO_TOKEN
-  ? process.env.NEXT_PUBLIC_TURSO_TOKEN
-  : (typeof window !== "undefined" && (window as any).ENV?.TURSO_TOKEN) || "";
+// Solo se importa desde el servidor (rutas API). El navegador nunca ve el token.
+// Acepta libsql://... remoto y file:... para trabajar en local sin red.
+const url = process.env.TURSO_URL || process.env.NEXT_PUBLIC_TURSO_URL || "";
+const authToken = process.env.TURSO_TOKEN || process.env.NEXT_PUBLIC_TURSO_TOKEN || "";
 
 export const tursoClient = createClient({ url, authToken });
 
